@@ -87,6 +87,25 @@ def add_many_transactions(conn,details):
     print('Added new transactions')
     conn.commit()
 
+'''
+    Query functions
+'''
+def know_who_paid_type(conn,fee_type,semester):
+    sql = "SELECT students.student_id,students.name,students.semester FROM students INNER JOIN ( SELECT transactions.student_id as student_id FROM transactions INNER JOIN fees ON transactions.fee_type = fees.type AND transactions.semester = fees.semester WHERE transactions.fee_type=? AND transactions.semester =? AND (fees.amount-transactions.amount)==0) as fee_transaction ON fee_transaction.student_id = students.student_id"
+    cursor = conn.cursor()
+    cursor.execute(sql,(fee_type,semester,))
+    details = cursor.fetchall()
+    print("Semester %s tudents who have paid %s"%(semester,fee_type))
+    print(details)
+
+def know_who_not_paid_type(conn,fee_type,semester):
+    sql = "SELECT students.name,fee_transaction.balance FROM students INNER JOIN ( SELECT transactions.student_id as student_id, (fees.amount-transactions.amount) as balance FROM transactions INNER JOIN fees ON transactions.fee_type = fees.type AND transactions.semester = fees.semester WHERE transactions.fee_type=? AND transactions.semester =? AND (fees.amount-transactions.amount)!=0) as fee_transaction ON fee_transaction.student_id = students.student_id"
+    cursor = conn.cursor()
+    cursor.execute(sql,(fee_type,semester,))
+    details = cursor.fetchall()
+    print("Semester %s tudents who have not paid %s yet"%(semester,fee_type))
+    print(details)
+
 
 def main():
     db_file="./fcaa.db"
@@ -114,6 +133,9 @@ def main():
     transaction4=('MISCELLANEOUS','2015BCS0019',7,1000,'7th Semester miscellaneous fee','')
     transaction=[transaction2,transaction3,transaction4]
     add_many_transactions(conn,transaction)
+
+    know_who_paid_type(conn,'HOSTEL_FEE',5)
+    know_who_not_paid_type(conn,'TUITION_FEE',7)
 
 
 if __name__=="__main__":
