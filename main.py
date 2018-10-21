@@ -120,7 +120,7 @@ def people_with_balance_fee(conn,semester):
     cursor.execute(sql,(semester,))
     details = cursor.fetchall()
     print("People with balance fees in semester %d "%(semester,))
-    print(details)
+    print(details) 
 
 def main():
     db_file="./fcaa.db"
