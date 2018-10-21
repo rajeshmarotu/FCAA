@@ -106,6 +106,21 @@ def know_who_not_paid_type(conn,fee_type,semester):
     print("Semester %s tudents who have not paid %s yet"%(semester,fee_type))
     print(details)
 
+def people_paid_whole_fee(conn,semester):
+    sql = "SELECT student_list.student_id, student_list.name, student_list.amount as balance FROM (SELECT semester, SUM(amount) as amount FROM fees GROUP BY semester ORDER BY semester) as fees INNER JOIN  (SELECT students.student_id, students.semester as semester,students.name, amount FROM students INNER JOIN (SELECT semester, student_id, SUM(amount) as amount FROM transactions WHERE semester=? GROUP BY semester,student_id)as transactions ON students.student_id=transactions.student_id) as student_list ON fees.semester=student_list.semester WHERE fees.amount=student_list.amount"
+    cursor = conn.cursor()
+    cursor.execute(sql,(semester,))
+    details = cursor.fetchall()
+    print("People who have paid full fee in semester %d "%(semester,))
+    print(details)
+
+def people_with_balance_fee(conn,semester):
+    sql = "SELECT student_list.student_id, student_list.name,(fees.amount-student_list.amount) as balance FROM (SELECT semester, SUM(amount) as amount FROM fees GROUP BY semester ORDER BY semester) as fees INNER JOIN  (SELECT students.student_id, students.semester as semester,students.name, amount FROM students INNER JOIN (SELECT semester, student_id, SUM(amount) as amount FROM transactions WHERE semester=? GROUP BY semester,student_id)as transactions ON students.student_id=transactions.student_id) as student_list ON fees.semester=student_list.semester WHERE fees.amount!=student_list.amount"
+    cursor = conn.cursor()
+    cursor.execute(sql,(semester,))
+    details = cursor.fetchall()
+    print("People with balance fees in semester %d "%(semester,))
+    print(details)
 
 def main():
     db_file="./fcaa.db"
@@ -136,6 +151,8 @@ def main():
 
     know_who_paid_type(conn,'HOSTEL_FEE',5)
     know_who_not_paid_type(conn,'TUITION_FEE',7)
+    people_paid_whole_fee(conn,7)
+    people_with_balance_fee(conn,7)
 
 
 if __name__=="__main__":
